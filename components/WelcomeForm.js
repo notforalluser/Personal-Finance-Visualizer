@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { generateToken } from '@/utils/helpers';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,6 +12,14 @@ export default function WelcomeForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef(null);
   const router = useRouter();
+
+  useEffect(() => {
+    const existingToken = localStorage.getItem('finance-token');
+    if (!existingToken) {
+      const token = generateToken();
+      localStorage.setItem('finance-token', token);
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,8 +34,6 @@ export default function WelcomeForm() {
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem('finance-token') || generateToken();
-      localStorage.setItem('finance-token', token);
       localStorage.setItem('user-name', name.trim());
 
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -38,6 +44,10 @@ export default function WelcomeForm() {
     }
   };
 
+  const handleContinueWithoutName = () => {
+    router.push('/dashboard');
+  };
+
   return (
     <>
       <Head>
@@ -46,10 +56,8 @@ export default function WelcomeForm() {
       </Head>
 
       <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-black">
-        {/* Top-left circular blur background */}
+
         <div className="absolute top-[-150px] left-[-150px] w-[400px] h-[400px] rounded-full bg-purple-600 opacity-20 blur-[80px]"></div>
-        
-        {/* Bottom-right circular blur background */}
         <div className="absolute bottom-[-150px] right-[-150px] w-[400px] h-[400px] rounded-full bg-blue-600 opacity-20 blur-[80px]"></div>
 
         {/* Animated background elements */}
@@ -72,15 +80,14 @@ export default function WelcomeForm() {
 
         <div className="w-full max-w-md z-10">
           <div className="relative z-10 w-full max-w-md bg-white/5 backdrop-blur-md rounded-2xl p-8 border border-white/20 shadow-2xl overflow-hidden">
-            {/* Additional decorative elements inside the card */}
             <div className="absolute top-[-50px] left-[-50px] w-[200px] h-[200px] rounded-full bg-purple-400/10 blur-[60px]"></div>
             <div className="absolute bottom-[-50px] right-[-50px] w-[200px] h-[200px] rounded-full bg-blue-400/10 blur-[60px]"></div>
-            
+
             <div className="relative z-20">
               <div className="text-center">
                 <div className="mb-6">
                   <h1 className="text-3xl font-bold text-white mb-2">
-                    Welcome to<br></br> <span className="text-indigo-600">Personal Finance Visualizer</span>
+                    Welcome to<br /> <span className="text-indigo-600">Personal Finance Visualizer</span>
                   </h1>
                   <p className="text-gray-200">
                     Enter your name to access your financial dashboard
@@ -94,20 +101,18 @@ export default function WelcomeForm() {
                     Full Name
                   </label>
                   <div className="relative">
-                    <div>
-                      <input
-                        ref={inputRef}
-                        id="name"
-                        type="text"
-                        placeholder="John Doe"
-                        className={`w-full pl-10 pr-2 py-2 rounded-lg bg-white/20 text-white border-2 ${error ? 'border-red-400' : 'border-blue-200 hover:border-purple-200'} outline-none focus:border-purple-800 transition-all`}
-                        value={name}
-                        onChange={(e) => {
-                          setName(e.target.value);
-                          if (error) setError('');
-                        }}
-                      />
-                    </div>
+                    <input
+                      ref={inputRef}
+                      id="name"
+                      type="text"
+                      placeholder="Your name"
+                      className={`w-full pl-10 pr-2 py-2 rounded-lg bg-white/20 text-white border-2 ${error ? 'border-red-400' : 'border-blue-200 hover:border-purple-200'} outline-none focus:border-purple-800 transition-all`}
+                      value={name}
+                      onChange={(e) => {
+                        setName(e.target.value);
+                        if (error) setError('');
+                      }}
+                    />
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white" size={18} />
                   </div>
                   <AnimatePresence>
@@ -129,11 +134,7 @@ export default function WelcomeForm() {
                     <span className="relative z-10 font-semibold">
                       {isSubmitting ? 'Wait...' : 'Continue'}
                     </span>
-                    {!isSubmitting && (
-                      <span>
-                        <ArrowRight size={18} />
-                      </span>
-                    )}
+                    {!isSubmitting && <ArrowRight size={18} />}
                     {isSubmitting && (
                       <span
                         animate={{ rotate: 360 }}
@@ -151,7 +152,13 @@ export default function WelcomeForm() {
               </form>
 
               <div className="text-center text-sm text-gray-200 pt-3 mt-5 border-t border-gray-200">
-                <p>Name is only used for better looking of Website</p>
+                <p>Providing your name is optional and has no effect on functionality</p>
+                <button
+                  onClick={handleContinueWithoutName}
+                  className="mt-4 text-indigo-400 hover:underline transition"
+                >
+                  Continue without name
+                </button>
               </div>
             </div>
           </div>
